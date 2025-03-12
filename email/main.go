@@ -12,13 +12,13 @@ import (
 func main() {
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "pkc-921jm.us-east-2.aws.confluent.cloud:9092",
-		"security.protocol": "SASL_SSL",
-		"sasl.username": "NK4AXYUASJXEZKKK",
-		"sasl.password": "LGmltPhHp4wTu0dVrZLxJqSWlx1K2jmlROdElaspDQFLixCCJAFjCQ6prKPOkf8N",
-		"sasl.mechanisms": "PLAIN",
-		"group.id":          "myGroup",
-		"auto.offset.reset": "earliest",
+		"bootstrap.servers": "",
+		"security.protocol": "",
+		"sasl.username": "",
+		"sasl.password": "",
+		"sasl.mechanisms": "",
+		"group.id":          "",
+		"auto.offset.reset": "",
 	})
 
 	if err != nil {

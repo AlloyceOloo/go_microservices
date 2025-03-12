@@ -1,0 +1,6 @@
+go-ambassador/.dbdata
+go-ambassador/.idea
+users/.dbdata
+email/tmp
+go-ambassador/tmp
+users/tmp
