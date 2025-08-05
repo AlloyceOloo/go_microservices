@@ -19,3 +19,5 @@ Kafka: Manages asynchronous communication between services, ensuring loose coupl
 
 Docker: All services are containerized for easier deployment and consistency across environments.
 
+<h2>Future/Current Works</h2></n>
+Completely decouple the Admin, Checkout and Ambassador endpoints; similar to the email endpoint
