@@ -1,0 +1,68 @@
+{
+  "title": "JUMO Platform Overview",
+  "uid": "jumo-platform",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate — All Services",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "HTTP Error Rate (5xx) — All Services",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "{{job}} 5xx"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Kafka orders.completed — Messages / sec",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "rate(kafka_server_brokertopicmetrics_messagesin_total{topic=\"orders.completed\"}[5m])",
+          "legendFormat": "msg/s"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Warehouse Row Counts",
+      "type": "table",
+      "gridPos": { "x": 6, "y": 8, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "pg_stat_user_tables_n_live_tup{schemaname=\"public\"}",
+          "legendFormat": "{{relname}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Last Spark Run",
+      "type": "text",
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+      "options": {
+        "mode": "markdown",
+        "content": "See `pipeline_metadata` table in warehouse_db for last run timestamp."
+      }
+    }
+  ]
+}

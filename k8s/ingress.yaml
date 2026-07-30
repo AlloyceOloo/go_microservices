@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jumo-ingress
+  namespace: jumo-platform
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: admin
+                port:
+                  number: 8002
+          - path: /api/ambassador
+            pathType: Prefix
+            backend:
+              service:
+                name: ambassador
+                port:
+                  number: 8003
+          - path: /api/checkout
+            pathType: Prefix
+            backend:
+              service:
+                name: checkout
+                port:
+                  number: 8004
+          - path: /api/analytics
+            pathType: Prefix
+            backend:
+              service:
+                name: analytics
+                port:
+                  number: 8005
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: users
+                port:
+                  number: 8001
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: react-frontend
+                port:
+                  number: 3000

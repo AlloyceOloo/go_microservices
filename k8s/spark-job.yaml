@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-aggregate-orders
+  namespace: jumo-platform
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: spark-job
+          image: ghcr.io/kristy/jumo-spark-job:latest
+          imagePullPolicy: Always
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { cpu: "1",    memory: "768Mi" }
+          envFrom:
+            - configMapRef:  { name: jumo-config }
+            - secretRef:     { name: jumo-secrets }
+          env:
+            - name: MYSQL_HOST
+              value: ambassador-db
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: DB_USER }
+            - name: MYSQL_PASS
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: DB_PASS }

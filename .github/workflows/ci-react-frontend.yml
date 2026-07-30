@@ -1,0 +1,35 @@
+name: CI — React Frontend
+
+on:
+  push:
+    paths: ['react-frontend/**']
+  pull_request:
+    paths: ['react-frontend/**']
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: react-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: react-frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: react-frontend
+        run: npm test -- --watchAll=false --passWithNoTests
+
+      - name: Docker build (smoke)
+        uses: docker/build-push-action@v5
+        with:
+          context: react-frontend
+          push: false
+          tags: jumo/react-frontend:ci

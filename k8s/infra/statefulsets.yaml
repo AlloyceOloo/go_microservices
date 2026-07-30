@@ -1,0 +1,267 @@
+# ── MySQL for users service ───────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: users-db
+  namespace: jumo-platform
+spec:
+  serviceName: users-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-db
+  template:
+    metadata:
+      labels:
+        app: users-db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8
+          env:
+            - name: MYSQL_DATABASE
+              value: users
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: DB_PASS }
+          ports:
+            - containerPort: 3306
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-db
+  namespace: jumo-platform
+spec:
+  selector:
+    app: users-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None
+---
+# ── MySQL for ambassador/admin/checkout ───────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ambassador-db
+  namespace: jumo-platform
+spec:
+  serviceName: ambassador-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ambassador-db
+  template:
+    metadata:
+      labels:
+        app: ambassador-db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8
+          env:
+            - name: MYSQL_DATABASE
+              value: ambassador
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: DB_PASS }
+          ports:
+            - containerPort: 3306
+          resources:
+            requests: { cpu: "100m", memory: "384Mi" }
+            limits:   { cpu: "500m", memory: "768Mi" }
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ambassador-db
+  namespace: jumo-platform
+spec:
+  selector:
+    app: ambassador-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None
+---
+# ── PostgreSQL warehouse ──────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: warehouse-db
+  namespace: jumo-platform
+spec:
+  serviceName: warehouse-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: warehouse-db
+  template:
+    metadata:
+      labels:
+        app: warehouse-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: warehouse
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: WAREHOUSE_USER }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: jumo-secrets, key: WAREHOUSE_PASS }
+          ports:
+            - containerPort: 5432
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "300m", memory: "384Mi" }
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: warehouse-db
+  namespace: jumo-platform
+spec:
+  selector:
+    app: warehouse-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None
+---
+# ── Redis ─────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: jumo-platform
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests: { cpu: "25m",  memory: "32Mi" }
+            limits:   { cpu: "100m", memory: "128Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: jumo-platform
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  clusterIP: None
+---
+# ── Kafka (single-node KRaft) ─────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: jumo-platform
+spec:
+  serviceName: kafka
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: bitnami/kafka:3.7
+          env:
+            - name: KAFKA_CFG_NODE_ID
+              value: "1"
+            - name: KAFKA_CFG_PROCESS_ROLES
+              value: broker,controller
+            - name: KAFKA_CFG_CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka:9093"
+            - name: KAFKA_CFG_LISTENERS
+              value: PLAINTEXT://:9092,CONTROLLER://:9093
+            - name: KAFKA_CFG_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka:9092
+            - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
+              value: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+            - name: KAFKA_CFG_CONTROLLER_LISTENER_NAMES
+              value: CONTROLLER
+            - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
+            - name: ALLOW_PLAINTEXT_LISTENER
+              value: "yes"
+          ports:
+            - containerPort: 9092
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: jumo-platform
+spec:
+  selector:
+    app: kafka
+  ports:
+    - port: 9092
+      targetPort: 9092
+  clusterIP: None

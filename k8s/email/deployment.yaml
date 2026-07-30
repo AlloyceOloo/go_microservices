@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email
+  namespace: jumo-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      containers:
+        - name: email
+          image: ghcr.io/kristy/jumo-email:latest
+          imagePullPolicy: Always
+          resources:
+            requests: { cpu: "25m",  memory: "32Mi"  }
+            limits:   { cpu: "100m", memory: "128Mi" }
+          envFrom:
+            - configMapRef:  { name: jumo-config }
+            - secretRef:     { name: jumo-secrets }

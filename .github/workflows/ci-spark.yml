@@ -1,0 +1,32 @@
+name: CI — Spark
+
+on:
+  push:
+    paths: ['spark/**']
+  pull_request:
+    paths: ['spark/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install PySpark + pytest
+        run: pip install "pyspark==3.5.*" pytest
+
+      - name: Run unit tests
+        run: pytest spark/tests/ -v
+
+      - name: Docker build (smoke)
+        uses: docker/build-push-action@v5
+        with:
+          context: spark
+          push: false
+          tags: jumo/spark-job:ci

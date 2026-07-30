@@ -1,0 +1,64 @@
+name: CI — Go Services
+
+on:
+  push:
+    paths:
+      - 'go_microservices/users/**'
+      - 'go_microservices/admin/**'
+      - 'go_microservices/ambassador/**'
+      - 'go_microservices/checkout/**'
+      - 'go_microservices/email/**'
+      - 'go_microservices/analytics/**'
+  pull_request:
+    paths:
+      - 'go_microservices/users/**'
+      - 'go_microservices/admin/**'
+      - 'go_microservices/ambassador/**'
+      - 'go_microservices/checkout/**'
+      - 'go_microservices/email/**'
+      - 'go_microservices/analytics/**'
+
+jobs:
+  build:
+    name: ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [users, admin, ambassador, checkout, email, analytics]
+        include:
+          - service: users
+            context: go_microservices/users
+          - service: admin
+            context: go_microservices/admin
+          - service: ambassador
+            context: go_microservices/ambassador
+          - service: checkout
+            context: go_microservices/checkout
+          - service: email
+            context: go_microservices/email
+          - service: analytics
+            context: go_microservices/analytics
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: ${{ matrix.context }}/go.sum
+
+      - name: go vet
+        working-directory: ${{ matrix.context }}
+        run: go vet ./...
+
+      - name: go build
+        working-directory: ${{ matrix.context }}
+        run: go build ./...
+
+      - name: Docker build (smoke)
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          push: false
+          tags: jumo/${{ matrix.service }}:ci

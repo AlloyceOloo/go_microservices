@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jumo-config
+  namespace: jumo-platform
+data:
+  # Ports
+  PORT: "8000"
+
+  # Database names
+  USERS_DB_NAME: users
+  AMBASSADOR_DB_NAME: ambassador
+  WAREHOUSE_DB: warehouse
+  WAREHOUSE_PORT: "5432"
+
+  # Service hosts (K8s service names)
+  DB_HOST_USERS: users-db
+  DB_HOST_AMBASSADOR: ambassador-db
+  WAREHOUSE_HOST: warehouse-db
+  REDIS_ADDR: redis:6379
+  KAFKA_BROKERS: kafka:9092
+
+  # Kafka
+  KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+  KAFKA_GROUP_ID: email-service
+  KAFKA_SASL_MECHANISM: PLAIN
+
+  # CORS
+  CORS_ORIGIN: "http://localhost:3000"
+
+  # Stripe URLs
+  STRIPE_SUCCESS_URL: "http://localhost:5000/success?source={CHECKOUT_SESSION_ID}"
+  STRIPE_CANCEL_URL: "http://localhost:5000/error"

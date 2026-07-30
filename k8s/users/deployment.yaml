@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users
+  namespace: jumo-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      containers:
+        - name: users
+          image: ghcr.io/kristy/jumo-users:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests: { cpu: "50m",  memory: "64Mi"  }
+            limits:   { cpu: "200m", memory: "256Mi" }
+          envFrom:
+            - configMapRef:  { name: jumo-config }
+            - secretRef:     { name: jumo-secrets }
+          env:
+            - name: DB_HOST
+              value: users-db
+            - name: DB_NAME
+              value: users
+          livenessProbe:
+            httpGet: { path: /api/users, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /api/users, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
